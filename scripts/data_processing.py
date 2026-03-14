@@ -4,11 +4,11 @@ import pandas as pd
 df = pd.read_csv("data/tourism.csv")
 
 # Clean column names
-df.columns = df.columns.str.strip()
-df.columns = df.columns.str.lower()
-df.columns = df.columns.str.replace(" ", "_")
+df.columns = df.columns.str.strip()           # remove extra spaces
+df.columns = df.columns.str.lower()           # lowercase
+df.columns = df.columns.str.replace(" ", "_") # replace spaces
 
-# Rename columns for easier use
+# Rename important columns for easier use
 df = df.rename(columns={
     "name_of_the_monument": "monument",
     "domestic-2019-20": "domestic_2019",
@@ -20,18 +20,18 @@ df = df.rename(columns={
 # Fill missing values
 df = df.fillna(0)
 
-# Create total visitor columns
+# Create total visitors columns
 df["total_visitors_2019"] = df["domestic_2019"] + df["foreign_2019"]
 df["total_visitors_2020"] = df["domestic_2020"] + df["foreign_2020"]
 
-# Use pre-covid tourism as main metric
+# Use 2019 data as main tourism indicator (pre-covid normal tourism)
 df["total_visitors"] = df["total_visitors_2019"]
 
-# Create crowd index (0-1 scale)
+# Create crowd index (normalized value 0-1)
 max_visitors = df["total_visitors"].max()
 df["crowd_index"] = df["total_visitors"] / max_visitors
 
-# Create crowd level classification
+# Create simple crowd category for later ML model
 def crowd_level(visitors):
     if visitors > 2000000:
         return "High"
@@ -41,10 +41,6 @@ def crowd_level(visitors):
         return "Low"
 
 df["crowd_level"] = df["total_visitors"].apply(crowd_level)
-
-# Hidden gem detection (low visitor monuments)
-median_visitors = df["total_visitors"].median()
-df["hidden_gem"] = df["total_visitors"] < median_visitors
 
 # Save processed dataset
 df.to_csv("data/processed_tourism.csv", index=False)
